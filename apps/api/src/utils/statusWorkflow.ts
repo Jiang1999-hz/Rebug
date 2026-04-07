@@ -1,4 +1,4 @@
-import type { BugStatus } from '@prisma/client';
+import type { BugStatus } from '../domain/enums.js';
 
 const allowedTransitions: Record<BugStatus, BugStatus[]> = {
   OPEN: ['IN_PROGRESS', 'CLOSED'],

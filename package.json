@@ -11,6 +11,7 @@
     "db:generate": "npm run prisma:generate --workspace @bug-feedback/api",
     "db:migrate": "npm run prisma:migrate --workspace @bug-feedback/api",
     "db:seed": "npm run seed --workspace @bug-feedback/api",
+    "postinstall": "npm run db:generate",
     "typecheck:dashboard": "tsc -p apps/dashboard/tsconfig.json",
     "typecheck:widget": "tsc -p apps/widget/tsconfig.json",
     "dev:api": "npm run dev --workspace @bug-feedback/api",

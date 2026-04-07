@@ -1,8 +1,8 @@
 import { zValidator } from '@hono/zod-validator';
-import { AuthorType, BugStatus, Severity } from '@prisma/client';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+import { authorTypeValues, bugStatusValues, severityValues, type BugStatus } from '../domain/enums.js';
 import { prisma } from '../lib/prisma.js';
 import { getDeveloperPayload } from '../middleware/jwt.js';
 import type { AppEnv } from '../types.js';
@@ -12,7 +12,7 @@ import { jsonError } from '../utils/errors.js';
 const createBugSchema = z.object({
   title: z.string().min(3).max(160),
   description: z.string().max(4000).optional().default(''),
-  severity: z.nativeEnum(Severity),
+  severity: z.enum(severityValues),
   screenshots: z.array(z.string().url()).max(4).optional().default([]),
   pageUrl: z.string().url(),
   userAgent: z.string().min(3).max(2000),
@@ -20,7 +20,7 @@ const createBugSchema = z.object({
 });
 
 const updateStatusSchema = z.object({
-  status: z.nativeEnum(BugStatus)
+  status: z.enum(bugStatusValues)
 });
 
 const commentSchema = z.object({
@@ -28,8 +28,8 @@ const commentSchema = z.object({
 });
 
 const querySchema = z.object({
-  status: z.nativeEnum(BugStatus).optional(),
-  severity: z.nativeEnum(Severity).optional(),
+  status: z.enum(bugStatusValues).optional(),
+  severity: z.enum(severityValues).optional(),
   search: z.string().trim().optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(20)
@@ -73,7 +73,7 @@ bugsRoutes.post('/', zValidator('json', createBugSchema), async (c) => {
         ? {
             create: {
               content: `Client contact email: ${payload.contactEmail}`,
-              author: AuthorType.CLIENT
+              author: authorTypeValues[0]
             }
           }
         : undefined
@@ -248,10 +248,10 @@ bugsRoutes.post('/:id/comments', zValidator('json', commentSchema), async (c) =>
     return jsonError(c, 404, 'Bug not found.', 'BUG_NOT_FOUND');
   }
 
-  let author: AuthorType;
+  let author: (typeof authorTypeValues)[number];
 
   if (developerPayload) {
-    author = AuthorType.DEVELOPER;
+    author = authorTypeValues[1];
   } else if (apiKey) {
     const project = await prisma.project.findUnique({
       where: { apiKey },
@@ -262,7 +262,7 @@ bugsRoutes.post('/:id/comments', zValidator('json', commentSchema), async (c) =>
       return jsonError(c, 401, 'Authentication is required for comments.', 'COMMENT_AUTH_REQUIRED');
     }
 
-    author = AuthorType.CLIENT;
+    author = authorTypeValues[0];
   } else {
     return jsonError(c, 401, 'Authentication is required for comments.', 'COMMENT_AUTH_REQUIRED');
   }
