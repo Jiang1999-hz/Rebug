@@ -17,7 +17,24 @@ import { jsonError } from './utils/errors.js';
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFile);
-const widgetDistPath = path.resolve(currentDir, '../../widget/dist/widget.js');
+const widgetDistCandidates = [
+  path.resolve(currentDir, '../../widget/dist/widget.js'),
+  path.resolve(currentDir, '../../../widget/dist/widget.js'),
+  path.resolve(process.cwd(), 'apps', 'widget', 'dist', 'widget.js'),
+  path.resolve(process.cwd(), 'dist', 'widget.js')
+];
+
+async function readWidgetBundle() {
+  for (const widgetDistPath of widgetDistCandidates) {
+    try {
+      return await readFile(widgetDistPath, 'utf8');
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error('Widget build not found.');
+}
 
 export function createApp() {
   const app = new Hono<AppEnv>();
@@ -59,7 +76,7 @@ export function createApp() {
 
   app.get('/widget.js', async (c) => {
     try {
-      const script = await readFile(widgetDistPath, 'utf8');
+      const script = await readWidgetBundle();
       return new Response(script, {
         headers: {
           'Content-Type': 'application/javascript; charset=utf-8',
