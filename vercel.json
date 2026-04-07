@@ -1,0 +1,22 @@
+{
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/bugs",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/bugs/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/projects",
+      "destination": "/index.html"
+    }
+  ]
+}

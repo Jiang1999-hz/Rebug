@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  name           String
+  apiKey         String   @unique
+  allowedOrigins String[] @default([])
+  createdAt      DateTime @default(now())
+
+  bugs Bug[]
+}
+
+model Bug {
+  id          String      @id @default(cuid())
+  seqId       Int         @unique @default(autoincrement())
+  title       String
+  description String      @default("")
+  severity    Severity
+  status      BugStatus   @default(OPEN)
+  screenshots String[]    @default([])
+  pageUrl     String
+  userAgent   String
+  projectId   String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  comments Comment[]
+
+  @@index([projectId, status, severity, createdAt])
+  @@index([title])
+}
+
+model Comment {
+  id        String      @id @default(cuid())
+  content   String
+  author    AuthorType
+  bugId     String
+  createdAt DateTime    @default(now())
+
+  bug Bug @relation(fields: [bugId], references: [id], onDelete: Cascade)
+
+  @@index([bugId, createdAt])
+}
+
+model Developer {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum BugStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum AuthorType {
+  CLIENT
+  DEVELOPER
+}

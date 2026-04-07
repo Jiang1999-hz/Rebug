@@ -1,0 +1,38 @@
+{
+  "name": "@bug-feedback/api",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "seed": "tsx prisma/seed.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.782.0",
+    "@hono/node-server": "^1.14.2",
+    "@hono/zod-validator": "^0.4.3",
+    "@prisma/client": "^6.6.0",
+    "@vercel/blob": "^1.1.1",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.5.0",
+    "hono": "^4.7.7",
+    "jsonwebtoken": "^9.0.2",
+    "mime-types": "^2.1.35",
+    "prisma": "^6.6.0",
+    "ua-parser-js": "^1.0.39",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/mime-types": "^2.1.4",
+    "@types/node": "^22.14.1",
+    "@types/ua-parser-js": "^0.7.39",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
+}

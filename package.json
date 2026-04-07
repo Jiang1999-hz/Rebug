@@ -1,0 +1,21 @@
+{
+  "name": "bug-feedback-system",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "build:vercel": "npm run build --workspace @bug-feedback/dashboard && npm run build --workspace @bug-feedback/widget && node scripts/build-vercel-output.mjs",
+    "db:generate": "npm run prisma:generate --workspace @bug-feedback/api",
+    "db:migrate": "npm run prisma:migrate --workspace @bug-feedback/api",
+    "db:seed": "npm run seed --workspace @bug-feedback/api",
+    "typecheck:dashboard": "tsc -p apps/dashboard/tsconfig.json",
+    "typecheck:widget": "tsc -p apps/widget/tsconfig.json",
+    "dev:api": "npm run dev --workspace @bug-feedback/api",
+    "dev:dashboard": "npm run dev --workspace @bug-feedback/dashboard",
+    "dev:widget": "npm run dev --workspace @bug-feedback/widget",
+    "test": "npm run test --workspace @bug-feedback/api"
+  }
+}
