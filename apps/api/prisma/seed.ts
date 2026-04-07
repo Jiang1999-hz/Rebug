@@ -1,8 +1,21 @@
 import 'dotenv/config';
 
 import bcrypt from 'bcryptjs';
+import { PrismaClient } from '@prisma/client';
 
-import { prisma } from '../src/lib/prisma.js';
+const databaseUrl = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error('DIRECT_URL or DATABASE_URL is required for seeding.');
+}
+
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: databaseUrl
+    }
+  }
+});
 
 async function main() {
   const email = process.env.SEED_DEVELOPER_EMAIL ?? 'dev@example.com';
