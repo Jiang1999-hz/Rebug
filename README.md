@@ -74,6 +74,7 @@
 核心变量：
 
 - `DATABASE_URL`: PostgreSQL 连接串
+- `DIRECT_URL`: 数据库直连串，供 Prisma 迁移和 seed 使用
 - `JWT_SECRET`: 开发者 JWT 密钥
 - `CORS_ALLOWED_ORIGINS`: 允许的前端来源，逗号分隔
 - `BLOB_READ_WRITE_TOKEN`: Vercel Blob 读写令牌
@@ -169,6 +170,7 @@ npm run dev:widget
 至少补齐：
 
 - `DATABASE_URL`
+- `DIRECT_URL`
 - `JWT_SECRET`
 - `CORS_ALLOWED_ORIGINS`
 - `BLOB_READ_WRITE_TOKEN`
