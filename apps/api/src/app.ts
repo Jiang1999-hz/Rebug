@@ -55,6 +55,7 @@ export function createApp() {
   );
 
   app.get('/health', (c) => c.json({ status: 'ok' }));
+  app.get('/api/health', (c) => c.json({ status: 'ok' }));
 
   app.get('/widget.js', async (c) => {
     try {
