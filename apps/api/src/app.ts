@@ -124,20 +124,10 @@ export function createApp() {
     return c.json(parser.getResult());
   });
 
-  app.get('/meta/parse-user-agent', (c) => {
-    const userAgent = c.req.query('userAgent') ?? '';
-    const parser = new UAParser(userAgent);
-    return c.json(parser.getResult());
-  });
-
   app.route('/api/auth', authRoutes);
-  app.route('/auth', authRoutes);
   app.route('/api/bugs', bugRoutes);
-  app.route('/bugs', bugRoutes);
   app.route('/api/projects', projectRoutes);
-  app.route('/projects', projectRoutes);
   app.route('/api/upload', uploadRoutes);
-  app.route('/upload', uploadRoutes);
 
   app.notFound((c) => jsonError(c, 404, 'Route not found.', 'NOT_FOUND'));
 

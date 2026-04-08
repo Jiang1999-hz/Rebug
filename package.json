@@ -7,7 +7,9 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "build:vercel": "npm run build --workspace @bug-feedback/api && npm run build --workspace @bug-feedback/dashboard && npm run build --workspace @bug-feedback/widget && node scripts/build-vercel-output.mjs",
+    "build:api-service": "npm run build --workspace @bug-feedback/api && npm run build --workspace @bug-feedback/widget",
+    "build:dashboard": "npm run build --workspace @bug-feedback/dashboard",
+    "build:vercel": "npm run build:dashboard && node scripts/build-vercel-output.mjs",
     "db:generate": "npm run prisma:generate --workspace @bug-feedback/api",
     "db:migrate": "npm run prisma:migrate --workspace @bug-feedback/api",
     "db:seed": "npm run seed --workspace @bug-feedback/api",
@@ -17,6 +19,7 @@
     "dev:api": "npm run dev --workspace @bug-feedback/api",
     "dev:dashboard": "npm run dev --workspace @bug-feedback/dashboard",
     "dev:widget": "npm run dev --workspace @bug-feedback/widget",
+    "start:api-service": "node apps/api/dist/src/index.js",
     "test": "npm run test --workspace @bug-feedback/api"
   }
 }

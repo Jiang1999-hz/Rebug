@@ -1,93 +1,46 @@
 # Bug Feedback System
 
-一个轻量级缺陷反馈系统，包含三部分：
+一个轻量级 Bug 反馈系统，推荐使用下面这套部署方式：
 
-- `apps/api`: Hono + Prisma + PostgreSQL 后端
-- `apps/dashboard`: React + Vite + TypeScript 管理后台
-- `apps/widget`: 原生 JavaScript 嵌入式缺陷上报组件
+- `apps/api`: Hono + Prisma + PostgreSQL，部署到 Railway
+- `apps/widget`: 原生 JavaScript 组件，由 API 服务提供 `widget.js`
+- `apps/dashboard`: React + Vite 管理后台，部署到 Vercel
 
-这份仓库已经改成适合 Vercel 导入的结构：
-
-- 同一个 Vercel 项目可以同时提供 Dashboard、`/api/*` 接口、`/widget.js`
-- Dashboard 走静态构建输出到根目录 `dist/`
-- API 走 Vercel Function
-- Widget 默认同域访问 `/api/*`
-- 上传优先使用 Vercel Blob 直传，避免 Vercel Function 的请求体限制
-
-## 已实现功能
-
-### API
-
-- `POST /api/auth/login`
-- `GET /api/projects`
-- `POST /api/projects`
-- `POST /api/bugs`
-- `GET /api/bugs`
-- `GET /api/bugs/:id`
-- `PATCH /api/bugs/:id/status`
-- `POST /api/bugs/:id/comments`
-- `POST /api/upload`
-- `POST /api/upload/client`
-- `GET /widget.js`
-
-### Dashboard
-
-- 登录页 `/login`
-- 缺陷列表 `/bugs`
-- 状态、严重级别、标题搜索、分页
-- 列表页内联状态切换
-- 缺陷详情 `/bugs/:id`
-- 评论回复
-- 项目管理 `/projects`
-
-### Widget
-
-- 浮动按钮 + 滑出表单
-- Shadow DOM 样式隔离
-- 标题、描述、严重级别、截图、联系邮箱
-- 自动附带当前页面 URL 和浏览器信息
-- 手动上传截图
-- 自动截图 `html2canvas`
-- 成功态显示 `Reference #编号`
-
-## 目录结构
+## 推荐架构
 
 ```text
-.
-├── api/                        # Vercel Function 入口
-├── apps/
-│   ├── api/
-│   ├── dashboard/
-│   └── widget/
-├── dist/                       # 根级 Vercel 静态输出
-├── examples/
-│   └── widget-host.html
-├── scripts/
-├── vercel.json
-└── README.md
+Client Site
+  -> https://your-api.up.railway.app/widget.js
+  -> https://your-api.up.railway.app/api/*
+
+Developer Dashboard
+  -> https://your-dashboard.vercel.app
+  -> calls https://your-api.up.railway.app/api/*
 ```
 
-## 环境变量
+这样拆开以后：
 
-先复制根目录 `.env.example` 为 `.env`。
+- API 回到标准 Node 服务，不再依赖 Vercel Serverless 适配
+- Widget 默认和 API 同域，`apiBaseUrl` 可以自动推断
+- Dashboard 只负责静态页面，构建和部署都更简单
 
-核心变量：
+## 常用脚本
 
-- `DATABASE_URL`: PostgreSQL 连接串
-- `DIRECT_URL`: 数据库直连串，供 Prisma 迁移和 seed 使用
-- `JWT_SECRET`: 开发者 JWT 密钥
-- `CORS_ALLOWED_ORIGINS`: 允许的前端来源，逗号分隔
-- `BLOB_READ_WRITE_TOKEN`: Vercel Blob 读写令牌
-- `VERCEL_BLOB_CALLBACK_URL`: 本地调试 Blob 回调时可选
-- `S3_*`: 如果不用 Vercel Blob，也可以改接 R2 / S3
-- `SEED_DEVELOPER_EMAIL`
-- `SEED_DEVELOPER_PASSWORD`
+```bash
+npm install
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+npm run build:api-service
+npm run start:api-service
+npm run build:vercel
+```
 
 说明：
 
-- 在 Vercel 正式部署时，推荐使用 `Neon / Supabase` 提供 PostgreSQL
-- 在 Vercel 上，截图上传推荐配置 `BLOB_READ_WRITE_TOKEN`
-- 本地开发时，如果没有 Blob 和 S3，上传会自动回退到 `apps/api/uploads`
+- `build:api-service`: 构建 API 和 widget，给 Railway 服务用
+- `start:api-service`: 启动编译后的 API 服务
+- `build:vercel`: 只构建 Dashboard 静态产物
 
 ## 本地开发
 
@@ -97,21 +50,17 @@
 npm install
 ```
 
-### 2. 生成 Prisma Client
+### 2. 准备环境变量
+
+根目录复制 `.env.example` 为 `.env`
+
+如果你希望 Dashboard 本地直接指向远程 API，可以在 `apps/dashboard` 下复制 `.env.example` 为 `.env.local`
+
+### 3. 初始化数据库
 
 ```bash
 npm run db:generate
-```
-
-### 3. 执行数据库迁移
-
-```bash
 npm run db:migrate
-```
-
-### 4. 初始化开发者账号和演示项目
-
-```bash
 npm run db:seed
 ```
 
@@ -119,14 +68,13 @@ npm run db:seed
 
 - 开发者账号：`dev@example.com`
 - 默认密码：`ChangeMe123!`
-- 演示项目 `apiKey`：`proj_demo_local`
+- 演示项目 API Key：`proj_demo_local`
 
-### 5. 启动服务
+### 4. 启动服务
 
 ```bash
 npm run dev:api
 npm run dev:dashboard
-npm run dev:widget
 ```
 
 默认地址：
@@ -134,66 +82,91 @@ npm run dev:widget
 - API: `http://localhost:3000`
 - Dashboard: `http://localhost:5173`
 
-本地开发时，Vite 已经把 `/api`、`/uploads`、`/widget.js` 代理到 `localhost:3000`。
+Vite 本地开发时会把 `/api`、`/uploads`、`/widget.js` 代理到 `localhost:3000`
 
-## Vercel 部署
+## Railway 部署 API
 
-这份仓库已经适配成“一个仓库导入一个 Vercel 项目”的方式。
+推荐把 Railway 服务的仓库根目录设为 `/`
 
-### 1. 导入仓库
+Build Command:
 
-在 Vercel 里选择 Import Git Repository，直接导入这个仓库。
+```bash
+npm install && npm run build:api-service
+```
 
-不需要额外指定多项目 monorepo 目录，根目录即可。
+Start Command:
 
-### 2. 配置数据库
+```bash
+npm run start:api-service
+```
 
-推荐任选其一：
+Healthcheck Path:
 
-- Neon
-- Supabase
+```text
+/health
+```
 
-把连接串填到：
-
-- `DATABASE_URL`
-
-### 3. 配置 Blob 存储
-
-在 Vercel 项目里创建 Blob Store，然后把自动生成的：
-
-- `BLOB_READ_WRITE_TOKEN`
-
-注入到项目环境变量。
-
-### 4. 配置应用环境变量
-
-至少补齐：
+必须的环境变量：
 
 - `DATABASE_URL`
 - `DIRECT_URL`
 - `JWT_SECRET`
 - `CORS_ALLOWED_ORIGINS`
+
+可选环境变量：
+
 - `BLOB_READ_WRITE_TOKEN`
+- `S3_BUCKET`
+- `S3_REGION`
+- `S3_ENDPOINT`
+- `S3_ACCESS_KEY_ID`
+- `S3_SECRET_ACCESS_KEY`
+- `S3_PUBLIC_URL_BASE`
+- `SEED_DEVELOPER_EMAIL`
+- `SEED_DEVELOPER_PASSWORD`
 
-如果 Dashboard、API、Widget 都在同一个 Vercel 项目下，`CORS_ALLOWED_ORIGINS` 可以直接填你的生产域名。
+建议：
 
-### 5. 部署
+- `CORS_ALLOWED_ORIGINS` 可以先填 Dashboard 的线上域名，或先用 `*`
+- 数据库迁移和 seed 不要放进构建流程，第一次部署后单独执行
 
-Vercel 会自动执行：
+第一次部署完成后，再执行一次：
 
 ```bash
-npm run build:vercel
+npm run db:migrate
+npm run db:seed
 ```
 
-最终：
+这两步可以在 Railway 的 shell / one-off command 里跑，也可以在本地对着同一个生产数据库跑。
 
-- Dashboard 从根目录 `dist/` 提供
-- Widget 从 `/widget.js` 提供
-- API 从 `/api/*` 提供
+Railway API 验证地址：
+
+- `https://your-api.up.railway.app/health`
+- `https://your-api.up.railway.app/api/health`
+- `https://your-api.up.railway.app/widget.js`
+
+## Vercel 部署 Dashboard
+
+Vercel 继续从仓库根目录部署即可。
+
+推荐设置：
+
+- Framework Preset: `Other`
+- Install Command: `npm install`
+- Build Command: `npm run build:vercel`
+- Output Directory: `dist`
+
+Dashboard 需要配置：
+
+```text
+VITE_API_BASE_URL=https://your-api.up.railway.app
+```
+
+如果不配置它，Dashboard 会默认请求同域 `/api/*`，在“Vercel 前端 + Railway API”的架构下会直接 404。
 
 ## Widget 嵌入
 
-把下面代码放到客户页面：
+推荐直接从 Railway API 域名加载 widget，这样组件会自动把 API 地址推断成同域。
 
 ```html
 <script>
@@ -202,62 +175,60 @@ npm run build:vercel
     position: 'bottom-right'
   };
 </script>
-<script src="https://your-domain.com/widget.js" async></script>
+<script src="https://your-api.up.railway.app/widget.js" async></script>
 ```
 
-如果 Widget 和 API 不在同一个域名，也可以显式指定：
+如果你把 widget 放到别的域名，也可以显式指定：
 
 ```html
 <script>
   window.BugWidget = {
     apiKey: 'proj_xxxxxxxxxxxx',
-    apiBaseUrl: 'https://api.your-domain.com',
+    apiBaseUrl: 'https://your-api.up.railway.app',
     position: 'bottom-right'
   };
 </script>
 ```
 
-## 状态流转规则
+## API 路由
 
-- `OPEN -> IN_PROGRESS`
-- `OPEN -> CLOSED`
-- `IN_PROGRESS -> RESOLVED`
-- `IN_PROGRESS -> CLOSED`
-- `RESOLVED -> CLOSED`
-- `RESOLVED -> OPEN`
-- `CLOSED -> OPEN`
-
-后端会强校验，前端也会禁用不允许的选项。
+- `POST /api/auth/login`
+- `GET /api/bugs`
+- `GET /api/bugs/:id`
+- `POST /api/bugs`
+- `PATCH /api/bugs/:id/status`
+- `POST /api/bugs/:id/comments`
+- `GET /api/projects`
+- `POST /api/projects`
+- `POST /api/upload`
+- `POST /api/upload/client`
+- `GET /widget.js`
 
 ## 上传策略
 
 - 支持 `image/png`、`image/jpeg`、`image/webp`
-- 单文件最大 5MB
-- Vercel 环境下优先使用 Blob 直传
-- 本地环境无 Blob 时回退到传统 `/api/upload`
-- 本地环境无 S3/Blob 时，回退到 `apps/api/uploads`
+- 单文件最大 `5MB`
+- 优先使用 Vercel Blob 直传
+- 如果没有 Blob，也支持走 API 上传
+- 本地且未配置 Blob / S3 时，会回退到 `apps/api/uploads`
 
 ## 已验证
-
-已确认通过：
 
 - `npm install`
 - `npm run build --workspace @bug-feedback/api`
 - `npm run test --workspace @bug-feedback/api`
 - `npm run build --workspace @bug-feedback/dashboard`
 - `npm run build --workspace @bug-feedback/widget`
+- `npm run build:api-service`
 - `npm run build:vercel`
-- `npm run db:generate`
-- `npm run typecheck:dashboard`
-- `npm run typecheck:widget`
 
-额外结果：
+Widget 体积：
 
-- `apps/widget/dist/widget.js` 未压缩约 `42 KB`
-- `apps/widget/dist/widget.js` gzip 约 `14 KB`
+- `apps/widget/dist/widget.js` 原始约 `42 KB`
+- gzip 后约 `14 KB`
 
 ## 示例页
 
-如果你想快速验证 Widget 挂载，可以直接打开：
+本地挂载 widget 的示例页面：
 
 - [examples/widget-host.html](C:/Users/Jiang/Documents/bug反馈/examples/widget-host.html)
