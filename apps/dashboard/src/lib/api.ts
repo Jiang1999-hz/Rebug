@@ -40,19 +40,27 @@ async function request<T>(path: string, options: RequestOptions = {}) {
   });
 
   if (!response.ok) {
+    const rawText = (await response.text()).trim();
     let payload: ApiErrorPayload = {};
 
-    try {
-      payload = (await response.json()) as ApiErrorPayload;
-    } catch {
-      payload = {};
+    if (rawText) {
+      try {
+        payload = JSON.parse(rawText) as ApiErrorPayload;
+      } catch {
+        payload = {};
+      }
     }
 
     if (response.status === 401) {
       clearToken();
     }
 
-    throw new ApiError(response.status, payload.error ?? 'Request failed.', payload.code);
+    const isHtmlError = rawText.startsWith('<');
+    const fallbackMessage = isHtmlError
+      ? response.statusText || `Request failed (${response.status}).`
+      : rawText || response.statusText || `Request failed (${response.status}).`;
+
+    throw new ApiError(response.status, payload.error ?? fallbackMessage, payload.code);
   }
 
   return (await response.json()) as T;

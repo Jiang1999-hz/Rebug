@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "build:vercel": "npm run build --workspace @bug-feedback/api && npm run build --workspace @bug-feedback/dashboard && npm run build --workspace @bug-feedback/widget && node scripts/build-vercel-output.mjs",
+    "build:vercel": "npm run db:seed && npm run build --workspace @bug-feedback/api && npm run build --workspace @bug-feedback/dashboard && npm run build --workspace @bug-feedback/widget && node scripts/build-vercel-output.mjs",
     "db:generate": "npm run prisma:generate --workspace @bug-feedback/api",
     "db:migrate": "npm run prisma:migrate --workspace @bug-feedback/api",
     "db:seed": "npm run seed --workspace @bug-feedback/api",
