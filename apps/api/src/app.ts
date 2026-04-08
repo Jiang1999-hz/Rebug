@@ -125,6 +125,7 @@ export function createApp() {
   });
 
   app.route('/api/auth', authRoutes);
+  app.route('/api', authRoutes);
   app.route('/api/bugs', bugRoutes);
   app.route('/api/projects', projectRoutes);
   app.route('/api/upload', uploadRoutes);
