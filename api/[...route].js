@@ -1,8 +1,14 @@
-import 'dotenv/config';
+require('dotenv/config');
 
-import { handle } from '@hono/node-server/vercel';
-import { createApp } from '../apps/api/dist/src/app.js';
+const { handle } = require('@hono/node-server/vercel');
 
-const app = createApp();
+let cachedHandler;
 
-export default handle(app);
+module.exports = async (req, res) => {
+  if (!cachedHandler) {
+    const { createApp } = await import('../apps/api/dist/src/app.js');
+    cachedHandler = handle(createApp());
+  }
+
+  return cachedHandler(req, res);
+};
